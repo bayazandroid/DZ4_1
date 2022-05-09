@@ -3,12 +3,13 @@ package com.company;
 import java.util.Random;
 
 public class Main {
-    public static int bossHealth = 1000;
+    public static int bossHealth = 3000;
     public static int bossDamage = 50;
     public static String bossDefence;
-    public static int[] heroesHealth = {270, 260, 250, 400};
-    public static int[] heroesDamage = {25, 20, 15, 0};
-    public static String[] heroesAttackType = {"Physical", "Magical", "Kinetic", "MedicalHelp"};
+    public static int[] heroesHealth = {270, 260, 250, 600, 220, 240, 500, 400};
+    public static int[] heroesDamage = {25, 20, 15, 5, 10, 15, 25, 0};
+    public static String[] heroesAttackType = {"Physical", "Magical", "Kinetic", "Golem", "Lucky",
+            "Berserk", "Thor", "MedicalHelp"};
     public static int round_number = 0;
 
     public static void main(String[] args) {
@@ -53,7 +54,6 @@ public class Main {
                         + " используя коеффициент "
                         + coeff + " но герой был здоров");
             }
-            System.out.println();
         }
     }
 
@@ -98,16 +98,83 @@ public class Main {
         return allHeroesDead;
     }
 
+    public static int golemProtection(){
+        int softenedBossDamage;
+        if (heroesHealth[3] >0){
+            softenedBossDamage = bossDamage - 10;
+            int countOfHeroes = 0;
+            for (int i = 0; i < heroesHealth.length; i++) {
+                if (!heroesAttackType[i].equals("Golem")) {
+                    if (heroesHealth[i] > 0){
+                        countOfHeroes++;
+                    }
+                }
+            }
+            if (heroesHealth[3] - countOfHeroes * 10 - 10 > 0) {
+                heroesHealth[3] = heroesHealth[3] - countOfHeroes * 10 - 10;
+                System.out.println("Golem взял на себя " + (countOfHeroes * 10) + " урона" );
+            }else softenedBossDamage = 50;
+        } else {
+            softenedBossDamage = 50;
+        }
+        return softenedBossDamage;
+    }
+
     public static void bossHits() {
-        for (int i = 0; i < heroesHealth.length; i++) {
-            if (heroesHealth[i] <= 0) {
-                continue;
+        if (!thorShockedBoss()) {
+            bossDamage = golemProtection();
+            for (int i = 0; i < heroesHealth.length; i++) {
+                if (heroesHealth[i] <= 0) {
+                    continue;
+                }
+                if (heroesHealth[i] - bossDamage < 0) {
+                    heroesHealth[i] = 0;
+                } else {
+                    if (heroesAttackType[i].equals("Lucky")){
+                        luckyIsSuccesing(bossDamage);
+                    } else if (heroesAttackType[i].equals("Berserk")){
+                        berserkFighting(bossDamage, i);
+                    }
+                    heroesHealth[i] = heroesHealth[i] - bossDamage;
+                }
             }
-            if (heroesHealth[i] - bossDamage < 0) {
-                heroesHealth[i] = 0;
+        }
+        bossDamage=50;
+    }
+
+    private static boolean thorShockedBoss() {
+        if (heroesHealth[6] > 0){
+            Random random =new Random();
+            boolean lostHummer = random.nextBoolean() && random.nextBoolean() && random.nextBoolean();
+            if (lostHummer){
+                System.out.println("Boss на этот раз оглушен молотом Thorа");
             } else {
-                heroesHealth[i] = heroesHealth[i] - bossDamage;
+                System.out.println("Thor не смог вызвать молнию и удивить Bossa");
             }
+            return lostHummer;
+        }
+        return false;
+    }
+
+    private static void berserkFighting(int bossDamage, int i) {
+        Random random = new Random();
+        int randomNumber = random.nextInt(heroesAttackType.length) + 1;
+        int def = bossDamage / randomNumber;
+        if (bossHealth > 0 && bossHealth - def > 0){
+            bossHealth -= def;
+            heroesHealth[i] += def;
+            System.out.println("Berserk отразил и возвратил " + def + " + к своему урон");
+        }
+    }
+
+    private static void luckyIsSuccesing(int bossDamage) {
+        Random random = new Random();
+        int randomIndex =  random.nextInt(heroesAttackType.length);
+        if (randomIndex == 4 || randomIndex == 0){
+            System.out.println("Lucky везунчик");
+            heroesHealth[4] += bossDamage;
+        } else {
+            System.out.println("Lucky получил по заслугам");
         }
     }
 
